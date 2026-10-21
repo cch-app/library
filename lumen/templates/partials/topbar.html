@@ -1,0 +1,22 @@
+{#
+  Site header with a collapsible menu on small screens.
+  current: which nav item is active ("realms" or none). extra_class: positioning per page.
+#}
+{% macro topbar(current=none, extra_class="", home_href=none) %}
+<header class="relative z-30 flex items-center justify-between gap-4 px-4 py-3 md:px-10 md:py-5 {{ extra_class }}" data-menu>
+  <a href="{{ home_href or url_for('main.gate') }}" class="flex items-center gap-3 font-display text-lg font-bold tracking-[.14em] text-cream no-underline">
+    <svg width="24" height="28" viewBox="0 0 26 30" fill="none" stroke="#F5C451" stroke-width="1.6" aria-hidden="true"><path d="M2 29V13a11 11 0 0 1 22 0v16Z"/><path d="M13 4v25"/><circle cx="9.5" cy="18" r="1"/><circle cx="16.5" cy="18" r="1"/></svg>
+    LUMEN ARCHIVE
+  </a>
+  <button type="button" class="inline-flex size-11 items-center justify-center rounded-[10px] border border-gold-400/40 bg-night-900/70 text-cream md:hidden" data-menu-toggle aria-controls="nav-main" aria-expanded="false" aria-label="Open menu">
+    <svg class="menu-icon-open" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 6h14M3 10h14M3 14h14"/></svg>
+    <svg class="menu-icon-close hidden" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 4l12 12M16 4L4 16"/></svg>
+  </button>
+  <nav id="nav-main" class="nav-panel" aria-label="Primary">
+    <a href="{{ url_for('main.aisle') }}" class="rounded-lg px-1.5 py-3 text-sm tracking-wide no-underline {{ 'text-gold-400' if current == 'realms' else 'text-haze hover:text-gold-200' }}" {% if current == 'realms' %}aria-current="page"{% endif %}>Realms</a>
+    <a href="#" class="rounded-lg px-1.5 py-3 text-sm tracking-wide text-haze no-underline hover:text-gold-200">Search</a>
+    <a href="#" class="rounded-lg px-1.5 py-3 text-sm tracking-wide text-haze no-underline hover:text-gold-200">Paths</a>
+    <a href="#" class="rounded-lg px-1.5 py-3 text-sm tracking-wide text-haze no-underline hover:text-gold-200">About</a>
+  </nav>
+</header>
+{% endmacro %}

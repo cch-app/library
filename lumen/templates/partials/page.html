@@ -1,0 +1,73 @@
+{#
+  One printed page of a book. `page` is a BookPage (kind: toc | entry | end) or none (blank paper).
+#}
+{% macro ornament() %}
+<svg width="140" height="12" viewBox="0 0 140 12" fill="none" stroke="#8A6420" stroke-width="1.2" aria-hidden="true"><path d="M0 6h56"/><path d="M84 6h56"/><path d="M70 1l5 5-5 5-5-5z"/></svg>
+{% endmacro %}
+
+{% macro book_page(page, realm, book, pages) %}
+<div class="flex h-full flex-col overflow-y-auto px-[clamp(22px,8%,44px)] pt-[clamp(22px,7%,42px)] pb-5 font-serif text-ink">
+  {% if page is none %}
+    <div class="flex flex-1 items-center justify-center">{{ ornament() }}</div>
+
+  {% elif page.kind == "toc" %}
+    <div class="flex flex-col gap-3.5">
+      <p class="font-sans text-[11px] tracking-[.18em] text-rust uppercase">{{ realm.name }}</p>
+      <h1 class="font-display text-[clamp(24px,3vw,32px)] leading-tight font-bold">{{ book.title }}</h1>
+      {{ ornament() }}
+      <p class="text-[15px] leading-relaxed text-ink-soft italic">{{ book.intro or "Entries in this book, newest first." }}</p>
+      <h2 class="mt-2 font-sans text-xs font-semibold tracking-[.14em] text-ink-muted uppercase">Contents · newest first</h2>
+      {% set entry_pages = pages | selectattr("kind", "equalto", "entry") | list %}
+      {% if entry_pages %}
+      <ol class="flex flex-col" role="list">
+        {% for p in entry_pages %}
+        <li>
+          <button type="button" class="flex min-h-12 w-full cursor-pointer items-baseline gap-2.5 border-b border-dotted border-[#B9A57F] px-0.5 py-2.5 text-left hover:bg-[rgba(60,40,20,.05)] focus-visible:outline-rust" data-jump="{{ p.number - 1 }}">
+            <span class="flex min-w-0 flex-1 flex-col gap-0.5">
+              <span class="text-base leading-snug font-semibold">{{ p.entry.title }}</span>
+              <span class="font-sans text-xs text-ink-muted"><time datetime="{{ p.entry.published_at.isoformat() }}">{{ p.entry.date_label }}</time></span>
+            </span>
+            <span class="font-display text-sm text-ink-muted">{{ p.number }}</span>
+          </button>
+        </li>
+        {% endfor %}
+      </ol>
+      {% else %}
+      <p class="text-[15px] text-ink-soft">No entries yet.</p>
+      {% endif %}
+    </div>
+
+  {% elif page.kind == "entry" %}
+    {% set e = page.entry %}
+    <article class="flex flex-col gap-3">
+      <p class="font-sans text-[11px] tracking-[.16em] text-rust uppercase"><time datetime="{{ e.published_at.isoformat() }}">{{ e.date_label }}</time> · {{ e.read_minutes }} min read</p>
+      <h2 class="font-display text-[clamp(21px,2.6vw,27px)] leading-tight font-bold">{{ e.title }}</h2>
+      <p class="mb-1 text-sm text-ink-muted italic">by {{ e.author }}</p>
+      {% for para in e.paragraphs %}
+      <p class="text-base leading-[1.62] whitespace-pre-line">{{ para }}</p>
+      {% endfor %}
+      {% set img = url_for('main.media', pathname=e.image_path) if e.image_path else e.image_url %}
+      {% if img %}
+      <figure class="mt-1 flex flex-wrap items-center justify-center gap-3.5">
+        <img src="{{ img }}" alt="{{ e.image_alt }}" loading="lazy" class="h-auto max-h-56 w-auto max-w-[min(100%,260px)] min-w-[110px] rounded-sm">
+        {% if e.caption %}<figcaption class="flex-[1_1_140px] font-sans text-[13px] leading-normal text-ink-soft">{{ e.caption }}</figcaption>{% endif %}
+      </figure>
+      {% endif %}
+    </article>
+
+  {% elif page.kind == "end" %}
+    {% set empty = pages|length <= 2 %}
+    <div class="flex flex-1 flex-col items-center justify-center gap-4 py-6 text-center">
+      {{ ornament() }}
+      <p class="font-display text-[22px]">{{ "This book is still blank." if empty else "The oldest entry is behind you." }}</p>
+      <p class="max-w-[300px] text-[15px] leading-relaxed text-ink-soft italic">{{ "Be the first to write in it." if empty else "Know something this book is still missing? Add the next page." }}</p>
+      <a href="{{ url_for('main.write', realm_slug=realm.slug, book_slug=book.slug) }}" class="inline-flex min-h-11 items-center rounded-full bg-ink px-5 font-sans text-sm font-semibold text-parchment no-underline hover:bg-black">{{ "Write the first entry" if empty else "Write the next entry" }}</a>
+      <a href="{{ url_for('main.aisle', shelf=realm.slug, book=book.slug) }}" class="py-2.5 font-sans text-sm text-rust hover:text-ink">Return the book to its shelf</a>
+    </div>
+  {% endif %}
+
+  {% if page is not none %}
+  <div class="mt-auto pt-3.5 text-center font-display text-xs text-ink-muted">{{ page.number }}</div>
+  {% endif %}
+</div>
+{% endmacro %}

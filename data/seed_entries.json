@@ -1,0 +1,45 @@
+[
+  {
+    "realm": "computing",
+    "book": "consistent-hashing",
+    "title": "Virtual nodes in practice",
+    "author": "Lumen Archive",
+    "published_at": "2026-10-18T09:00:00+00:00",
+    "body": "With only a few servers on the ring, their random positions leave arcs of very different sizes, and the server owning the largest arc takes the most keys.\n\nVirtual nodes fix this by hashing each physical server onto the ring many times. Each server then owns many small arcs, and their total evens out. A bigger machine can simply be given more of them.\n\nThere is a cost: more tokens mean a larger routing table and more neighbours involved when a node joins. Apache Cassandra lowered its default from 256 tokens per node to 16 in version 4.0, paired with a smarter token-allocation algorithm."
+  },
+  {
+    "realm": "computing",
+    "book": "consistent-hashing",
+    "title": "Bounded loads: taming hot spots",
+    "author": "Lumen Archive",
+    "published_at": "2026-10-02T09:00:00+00:00",
+    "body": "Consistent hashing spreads keys evenly, but not necessarily traffic. One popular key can still overwhelm the server that owns it.\n\nConsistent hashing with bounded loads, introduced by Mirrokni, Thorup and Zadimoghaddam, caps every server at a small multiple of the average load. When a key's owner is full, the key keeps walking clockwise to the next server with room.\n\nMost of the ring's stability survives, and no server runs far ahead of the rest. Vimeo used the idea in HAProxy to balance video traffic across its cache servers."
+  },
+  {
+    "realm": "computing",
+    "book": "consistent-hashing",
+    "title": "Rendezvous hashing, the quiet alternative",
+    "author": "Lumen Archive",
+    "published_at": "2026-09-21T09:00:00+00:00",
+    "body": "Rendezvous hashing, also called highest random weight hashing, was described by Thaler and Ravishankar in 1996, a year before the hash ring.\n\nThere is no ring at all. For each key, every server gets a score from hash(key, server), and the key goes to the highest score. When a server leaves, only its keys move, each to its next-highest scorer.\n\nThe trade-off is lookup cost: scoring every server is O(n) per key, where a ring needs only a binary search. For a few dozen servers that cost is tiny."
+  },
+  {
+    "realm": "computing",
+    "book": "consistent-hashing",
+    "title": "The ring, step by step",
+    "author": "Lumen Archive",
+    "published_at": "2026-09-09T09:00:00+00:00",
+    "image_url": "/static/img/hash-ring.svg",
+    "image_alt": "Hash ring with servers A, B and C; each owns the arc ending at it",
+    "caption": "Remove B, and only B's arc passes to C. A's keys never move.",
+    "body": "1. Hash each server name to a point on a circle of possible hash values.\n\n2. Hash each key onto the same circle.\n\n3. Walk clockwise from the key. The first server you meet owns it."
+  },
+  {
+    "realm": "computing",
+    "book": "consistent-hashing",
+    "title": "Why hash mod N breaks",
+    "author": "Lumen Archive",
+    "published_at": "2026-08-30T09:00:00+00:00",
+    "body": "The obvious way to pick a server is hash(key) mod N. It spreads keys evenly, until N changes.\n\nGrow from 4 servers to 5 and a key stays put only when hash mod 4 equals hash mod 5. That holds for just 1 key in 5, so about 80% of keys move at once and the cache suddenly goes cold.\n\nKarger and colleagues introduced consistent hashing in 1997 to avoid exactly this: when a server joins or leaves, only about 1/N of the keys should move."
+  }
+]

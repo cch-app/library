@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% from "partials/topbar.html" import topbar %}
+{% block title %}Lost in the stacks — Lumen Archive{% endblock %}
+
+{% block body %}
+<div class="flex min-h-dvh-safe flex-col bg-[radial-gradient(ellipse_at_50%_60%,#161C31_0%,#07090F_62%)] text-cream">
+  {{ topbar() }}
+  <main id="main" class="flex flex-1 flex-col items-center justify-center gap-4 px-4 pb-20 text-center">
+    <p class="text-xs tracking-[.32em] text-gold-500 uppercase">404</p>
+    <h1 class="font-display text-[clamp(26px,4vw,44px)] font-medium text-ivory">This page isn’t on any shelf.</h1>
+    <p class="max-w-md text-mist">The book may have moved, or the link was mistyped.</p>
+    <a href="{{ url_for('main.aisle') }}" class="btn-pill mt-2 no-underline">Walk the aisle of realms</a>
+  </main>
+</div>
+{% endblock %}

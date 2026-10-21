@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% from "partials/topbar.html" import topbar %}
+{% from "partials/page.html" import book_page %}
+{% block title %}{{ book.title }} — Lumen Archive{% endblock %}
+{% block description %}{{ book.intro or ("Entries on " ~ book.title ~ " in the " ~ realm.name ~ " realm.") }}{% endblock %}
+
+{% block body %}
+{% set shelf_url = url_for('main.aisle', shelf=realm.slug, book=book.slug) %}
+<div class="relative flex min-h-dvh-safe flex-col overflow-x-hidden bg-[radial-gradient(ellipse_70%_55%_at_50%_45%,rgba(255,214,140,.16),rgba(255,214,140,0)_70%),repeating-linear-gradient(to_bottom,#1C120B_0_46px,#21160D_46px_48px)] text-cream"
+     data-book data-pages="{{ pages|length }}" data-leaves="{{ leaves|length }}" data-start="{{ start_page }}" data-focus="left">
+
+  {{ topbar() }}
+
+  <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 pb-2.5 md:px-10 md:pb-3">
+    <nav aria-label="Breadcrumb" class="flex flex-wrap gap-x-2 gap-y-1 text-sm text-[#BDB5A4]">
+      <a href="{{ url_for('main.aisle') }}" class="no-underline">Realms</a><span aria-hidden="true">›</span>
+      <a href="{{ shelf_url }}" class="no-underline" style="color: {{ realm.color }}">{{ realm.name }}</a><span aria-hidden="true">›</span>
+      <span aria-current="page" class="text-cream">{{ book.title }}</span>
+    </nav>
+    <a href="{{ shelf_url }}" class="inline-flex min-h-11 items-center gap-2 text-sm text-gold-400 no-underline hover:text-gold-200">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M13 8H3"/><path d="M7 4L3 8l4 4"/></svg>
+      Back to the shelf
+    </a>
+  </div>
+
+  <main id="main" class="book-desk min-h-[440px] flex-1" aria-label="Open book: {{ book.title }}">
+    <div class="book-cover box-border rounded-[10px] bg-[#4A2A18] shadow-[inset_0_0_0_2px_#6B4226,0_30px_70px_rgba(0,0,0,.65)]">
+      <div class="book-pages absolute inset-3.5">
+        <div class="book-stack absolute inset-0">
+          {# left board: the contents page #}
+          <div class="paper-left board-left absolute inset-y-0 left-0 w-1/2 overflow-hidden" data-face="toc">
+            {{ book_page(pages[0], realm, book, pages) }}
+          </div>
+          {# right board: the endpaper, visible once every leaf is turned #}
+          <div class="board-right absolute inset-y-0 left-1/2 flex w-1/2 items-center justify-center rounded-r-md" data-face="endpaper" aria-hidden="true">
+            <p class="font-display text-base tracking-[.2em] text-[#E8D3A0]">LUMEN ARCHIVE</p>
+          </div>
+
+          {% for front, back in leaves %}
+          <div class="leaf absolute inset-y-0 left-1/2 w-1/2" data-leaf="{{ loop.index0 }}">
+            <div class="leaf-face paper-right absolute inset-0 overflow-hidden" data-face="front">
+              {{ book_page(front, realm, book, pages) }}
+              <button type="button" class="turn turn-next absolute inset-y-0 right-0 z-[3] w-[13%] cursor-pointer transition-colors focus-visible:outline-rust focus-visible:-outline-offset-4" data-next aria-label="Turn to the next page"></button>
+            </div>
+            <div class="leaf-face leaf-back paper-left absolute inset-0 overflow-hidden" data-face="back">
+              {{ book_page(back, realm, book, pages) }}
+              <button type="button" class="turn turn-prev absolute inset-y-0 left-0 z-[3] w-[13%] cursor-pointer transition-colors focus-visible:outline-rust focus-visible:-outline-offset-4" data-prev aria-label="Turn back to the previous page"></button>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="book-spine-shadow pointer-events-none absolute inset-y-3.5 left-1/2 z-[5] -ml-[25px] w-[50px]" aria-hidden="true"></div>
+    </div>
+
+    {# phones: tap the screen edge to glide between pages #}
+    <button type="button" class="absolute inset-y-0 left-0 z-[8] hidden w-[52px] cursor-pointer items-center justify-center text-cream max-[860px]:flex disabled:!hidden" data-prev aria-label="Previous page">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 4l-6 6 6 6"/></svg>
+    </button>
+    <button type="button" class="absolute inset-y-0 right-0 z-[8] hidden w-[52px] cursor-pointer items-center justify-center text-cream max-[860px]:flex disabled:!hidden" data-next aria-label="Next page">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 4l6 6-6 6"/></svg>
+    </button>
+  </main>
+
+  <nav class="flex flex-wrap items-center justify-center gap-x-3.5 gap-y-2.5 px-4 pt-3.5 pb-6" aria-label="Page controls">
+    <button type="button" class="btn-pill cursor-pointer" data-prev data-control>
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M10 3L5 8l5 5"/></svg>
+      <span class="max-[860px]:sr-only">Previous</span>
+    </button>
+    <span class="min-w-[130px] text-center font-display text-sm tracking-[.06em] text-sand" aria-live="polite" data-counter></span>
+    <button type="button" class="btn-pill cursor-pointer" data-jump="0">Contents</button>
+    <button type="button" class="btn-pill cursor-pointer" data-next data-control>
+      <span class="max-[860px]:sr-only">Next</span>
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3l5 5-5 5"/></svg>
+    </button>
+    <a href="{{ url_for('main.write', realm_slug=realm.slug, book_slug=book.slug) }}" class="btn-pill no-underline">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M11 2.5l2.5 2.5L6 12.5H3.5V10z"/></svg>
+      Write an entry
+    </a>
+  </nav>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/book.js') }}?v={{ config.ASSET_VERSION }}" defer></script>
+{% endblock %}

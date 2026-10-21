@@ -1,0 +1,63 @@
+{
+  "realms": [
+    {
+      "slug": "computing",
+      "name": "Computing",
+      "color": "#6FA8FF",
+      "blurb": "Algorithms, systems, data and AI",
+      "books": ["Consistent hashing", "Big-O notation", "Hash tables", "Graph algorithms", "Dynamic programming", "TCP/IP", "Raft consensus", "CAP theorem", "Data lineage", "Stream processing", "Compilers", "Transformers", "Public-key crypto", "Kubernetes"]
+    },
+    {
+      "slug": "mathematics",
+      "name": "Mathematics",
+      "color": "#B79CFF",
+      "blurb": "Structure, proof and pattern",
+      "books": ["Prime numbers", "Linear algebra", "Calculus", "Fourier transform", "Probability", "Bayes' theorem", "Group theory", "Topology", "Graph theory", "Set theory", "Complex numbers", "Statistics", "Gödel's theorems", "Number theory"]
+    },
+    {
+      "slug": "physics",
+      "name": "Physics",
+      "color": "#5FD3C4",
+      "blurb": "Matter, energy, space and time",
+      "books": ["Newton's laws", "Thermodynamics", "Electromagnetism", "Special relativity", "General relativity", "Quantum mechanics", "Entanglement", "Standard Model", "Optics", "Black holes", "Dark matter", "Superconductors"]
+    },
+    {
+      "slug": "life-sciences",
+      "name": "Life Sciences",
+      "color": "#8BD46B",
+      "blurb": "How living things work and change",
+      "books": ["DNA and genes", "Evolution", "Cell biology", "CRISPR", "Photosynthesis", "Immune system", "Neurons", "Ecosystems", "Microbiome", "Epigenetics", "Protein folding", "Viruses"]
+    },
+    {
+      "slug": "history",
+      "name": "History",
+      "color": "#E8A25C",
+      "blurb": "Civilisations and turning points",
+      "books": ["Mesopotamia", "Ancient Egypt", "Roman Republic", "Han dynasty", "Silk Road", "Edo period", "Meiji Restoration", "Renaissance", "Printing press", "Industrial Revolution", "World War I", "Cold War", "Space Race"]
+    },
+    {
+      "slug": "philosophy",
+      "name": "Philosophy",
+      "color": "#E58FB5",
+      "blurb": "Mind, meaning and how to live",
+      "books": ["Socrates", "Plato's Republic", "Aristotle's ethics", "Confucius", "Daoism", "Stoicism", "Descartes", "Kant", "Utilitarianism", "Existentialism", "Philosophy of mind", "Free will", "Ethics of AI"]
+    },
+    {
+      "slug": "economics",
+      "name": "Economics",
+      "color": "#F2CF5B",
+      "blurb": "Markets, incentives and scarcity",
+      "books": ["Supply and demand", "Opportunity cost", "Inflation", "Central banks", "Game theory", "Behavioral economics", "Comparative advantage", "Market failures", "GDP", "Keynes", "Adam Smith", "Auctions"]
+    },
+    {
+      "slug": "arts-letters",
+      "name": "Arts & Letters",
+      "color": "#FF8A7A",
+      "blurb": "Literature, music and visual art",
+      "books": ["The Tale of Genji", "Shakespeare", "Haiku", "Baroque music", "Jazz", "Impressionism", "Ukiyo-e", "Bauhaus", "Film editing", "Typography", "Poetic meter", "Mythology"]
+    }
+  ],
+  "book_intros": {
+    "computing/consistent-hashing": "How to spread keys across a changing set of servers so that adding or removing one moves only a small share of them."
+  }
+}

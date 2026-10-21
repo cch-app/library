@@ -1,0 +1,19 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      SECRET_KEY: ${SECRET_KEY:-dev-only-change-me}
+      # "auto" uses Vercel Blob when BLOB_READ_WRITE_TOKEN is set, else local files in /data
+      STORAGE_BACKEND: ${STORAGE_BACKEND:-auto}
+      BLOB_READ_WRITE_TOKEN: ${BLOB_READ_WRITE_TOKEN:-}
+      BLOB_ACCESS: ${BLOB_ACCESS:-public}
+      WRITE_PASSCODE: ${WRITE_PASSCODE:-}
+      CACHE_TTL: ${CACHE_TTL:-30}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped

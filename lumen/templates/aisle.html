@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% from "partials/topbar.html" import topbar %}
+{% block title %}Lumen Archive — The Aisle of Realms{% endblock %}
+
+{% block body %}
+<div class="aisle-stage relative h-dvh-safe min-h-[520px] overflow-hidden bg-[#07080C] text-cream"
+     data-aisle data-stations="{{ catalog.station_count }}"
+     data-exit-href="{{ url_for('main.gate', **{'from': 'library'}) }}"
+     {% if open_realm %}data-open="{{ open_realm.slug }}"{% endif %}>
+
+  {# ── the 3D aisle ── #}
+  <div class="aisle-scene absolute inset-0" data-scene>
+    <div class="aisle-head">
+      <div class="aisle-world">
+        <div class="aisle-plane aisle-floor"></div>
+        <div class="aisle-plane aisle-ceiling"></div>
+        <div class="aisle-plane aisle-wall aisle-wall-l"></div>
+        <div class="aisle-plane aisle-wall aisle-wall-r"></div>
+
+        {# The far wall: a framed painting, not another door #}
+        <div class="aisle-plane aisle-back flex flex-col items-center justify-center gap-[18px]">
+          <div class="h-2.5 w-[70%] rounded-[50%] bg-[radial-gradient(ellipse,rgba(255,236,190,.9),rgba(255,236,190,0)_70%)]"></div>
+          <div class="art-frame w-[72%] rounded-[3px] p-2.5">
+            <div class="bg-wood-800 p-1.5">
+              <img src="{{ url_for('static', filename='img/still-lake.svg') }}" alt="Painting of a lake among mountains at dawn" class="block h-auto w-full" width="400" height="260">
+            </div>
+          </div>
+          <p class="rounded-[3px] border border-gold-600 bg-wood-900 px-3.5 py-1.5 text-center font-display text-[13px] tracking-[.08em] text-[#E8D3A0]">Dawn over the Still Lake</p>
+        </div>
+
+        {% for i in range(catalog.station_count) %}
+        <div class="lantern" style="--pair: {{ i }}" aria-hidden="true"></div>
+        {% endfor %}
+
+        {% for realm in catalog.realms %}
+        <button type="button" class="shelf flex cursor-pointer flex-col gap-2 rounded border-[3px] border-wood-600 bg-wood-700 px-3.5 pt-3 pb-3.5 text-left focus-visible:outline-[3px] focus-visible:outline-offset-4"
+                style="--pair: {{ realm.pair }}; --sign: {{ -1 if realm.side == 'left' else 1 }}"
+                data-shelf="{{ realm.slug }}" data-pair="{{ realm.pair }}" data-dist="{{ realm.pair }}"
+                aria-label="Open the {{ realm.name }} bookshelf">
+          <span class="shelf-plaque flex flex-col items-center gap-0.5 rounded border border-gold-600 bg-wood-900 px-2.5 py-2 transition-shadow">
+            <span class="font-display text-base font-bold tracking-[.06em] whitespace-nowrap sm:text-xl" style="color: {{ realm.color }}">{{ realm.name }}</span>
+            <span class="text-[11px] tracking-[.14em] text-gold-500 uppercase">{{ realm.books|length }} books</span>
+          </span>
+          {% for row in realm.shelf_rows %}
+          <span class="flex flex-1 items-end gap-0.5 overflow-hidden border-b-[6px] border-[#5A3A20] bg-wood-950 px-1 shadow-[inset_0_10px_18px_rgba(0,0,0,.6)]">
+            {% for s in row %}<span class="flex-none rounded-t-sm shadow-[inset_-2px_0_rgba(0,0,0,.3)]" style="width: {{ s.width }}px; height: {{ s.height }}%; background: {{ s.color }}"></span>{% endfor %}
+          </span>
+          {% endfor %}
+          <span class="shelf-shade pointer-events-none absolute inset-0 bg-[#05060A]"></span>
+        </button>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  <div class="aisle-fog pointer-events-none absolute inset-0" aria-hidden="true"></div>
+
+  {{ topbar(current="realms", extra_class="aisle-topbar absolute inset-x-0 top-0 bg-gradient-to-b from-[#07080C]/85 to-transparent transition-opacity duration-500") }}
+
+  {# ── walking: upper aisle = forward, lower aisle = back (or EXIT at the entrance) ── #}
+  <main id="main" class="aisle-walk absolute top-[72px] bottom-[150px] left-1/2 z-20 flex w-[38vw] -translate-x-1/2 flex-col gap-1.5 transition-opacity duration-400 md:top-[84px] md:bottom-[132px] md:w-[clamp(140px,34vw,420px)]">
+    <h1 class="sr-only">The aisle of realms</h1>
+    <button type="button" class="zone-fwd flex flex-[1.15] cursor-pointer flex-col items-center justify-start gap-1.5 rounded-[18px] pt-[18px] text-[11px] tracking-[.12em] text-cream uppercase transition-colors disabled:cursor-default disabled:opacity-35 md:text-xs md:tracking-[.18em]"
+            data-forward aria-label="Walk forward to the next bookshelves">
+      <svg class="animate-bob" width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#F5C451" stroke-width="2" aria-hidden="true"><path d="M7 17l7-7 7 7"/></svg>
+      <span class="rounded-full border border-gold-400/35 bg-[#07080C]/60 px-2.5 py-1.5 md:px-3.5 md:py-2" data-forward-label>Walk forward</span>
+    </button>
+    <button type="button" class="zone-back flex flex-[.85] cursor-pointer flex-col items-center justify-end gap-1.5 rounded-[18px] pb-[18px] text-[11px] tracking-[.12em] text-cream uppercase transition-colors md:text-xs md:tracking-[.18em]"
+            data-back hidden aria-label="Step back to the previous bookshelves">
+      <span class="rounded-full border border-gold-400/35 bg-[#07080C]/60 px-2.5 py-1.5 md:px-3.5 md:py-2">Step back</span>
+      <svg class="animate-bob-down" width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#F5C451" stroke-width="2" aria-hidden="true"><path d="M7 11l7 7 7-7"/></svg>
+    </button>
+    <button type="button" class="zone-exit flex flex-[.85] cursor-pointer flex-col items-center justify-end gap-1.5 rounded-[18px] pb-[18px] text-[11px] tracking-[.12em] text-cream uppercase transition-colors md:text-xs md:tracking-[.18em]"
+            data-exit aria-label="Exit the library and return to the gate">
+      <span class="inline-flex items-center gap-2 rounded-md border-2 border-exit-glow bg-exit px-3.5 py-2 font-bold tracking-[.2em] text-white shadow-[0_0_18px_rgba(126,224,168,.55)]">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M7 3H3v12h4"/><path d="M10 5l4 4-4 4"/><path d="M14 9H6"/></svg>
+        EXIT
+      </span>
+      <span class="rounded-full border border-gold-400/35 bg-[#07080C]/60 px-2.5 py-1.5 md:px-3.5 md:py-2">Leave the library</span>
+      <svg class="animate-bob-down" width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#7EE0A8" stroke-width="2" aria-hidden="true"><path d="M7 11l7 7 7-7"/></svg>
+    </button>
+  </main>
+
+  {# ── HUD: the two shelves beside you ── #}
+  <nav class="aisle-hud absolute bottom-3 left-1/2 z-[25] flex w-[min(760px,calc(100%-32px))] -translate-x-1/2 flex-col gap-2.5 rounded-xl border border-gold-400/45 bg-[rgba(10,12,22,.88)] p-2.5 shadow-[0_0_0_3px_#0A0C16,0_18px_40px_rgba(0,0,0,.5)] transition-opacity duration-400 md:bottom-5 md:p-3"
+       aria-label="Bookshelves at this spot">
+    <div class="flex items-center justify-between gap-3 text-xs tracking-[.16em] text-gold-500 uppercase">
+      <span data-station-label>Aisle 1 of {{ catalog.station_count }}</span>
+      <span class="flex gap-1.5" aria-hidden="true">
+        {% for i in range(catalog.station_count) %}<span class="h-1 w-[22px] rounded-sm bg-night-600 data-[on]:bg-gold-400" data-pip="{{ i }}"></span>{% endfor %}
+      </span>
+    </div>
+    {% for i in range(catalog.station_count) %}
+    <div class="flex flex-wrap gap-2.5" data-hud-pair="{{ i }}" {% if i != 0 %}hidden{% endif %}>
+      {% for realm in catalog.realms if realm.pair == i %}
+      <button type="button" class="flex min-h-12 flex-[1_1_130px] cursor-pointer items-center gap-2.5 rounded-lg border border-night-600 px-3.5 text-sm font-medium text-cream hover:border-gold-400 hover:bg-gold-400/10 md:flex-[1_1_160px] md:text-[15px] {{ 'justify-end text-right' if realm.side == 'right' }}"
+              data-open-shelf="{{ realm.slug }}">
+        {% if realm.side == 'left' %}<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#F5C451" stroke-width="1.8" aria-hidden="true"><path d="M10 3L5 8l5 5"/></svg>{% endif %}
+        <span class="size-2.5 flex-none rounded-full" style="background: {{ realm.color }}"></span>
+        {{ realm.name }}
+        {% if realm.side == 'right' %}<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#F5C451" stroke-width="1.8" aria-hidden="true"><path d="M6 3l5 5-5 5"/></svg>{% endif %}
+      </button>
+      {% endfor %}
+    </div>
+    {% endfor %}
+  </nav>
+
+  {# ── an open bookcase (one per realm, shown by aisle.js) ── #}
+  <div class="browse absolute inset-0 z-40 flex items-center justify-center bg-[rgba(5,6,10,.55)] p-2 sm:p-4" data-browse>
+    {% for realm in catalog.realms %}
+    <section class="bookcase flex max-h-[calc(100dvh-16px)] w-full max-w-[1000px] flex-col rounded-lg border-[3px] border-wood-600 bg-wood-700 shadow-[0_0_0_4px_#0A0C16,0_0_0_6px_rgba(245,196,81,.4),0_30px_80px_rgba(0,0,0,.7)] sm:max-h-[calc(100dvh-32px)]"
+             style="--from: {{ '-60px' if realm.side == 'left' else '60px' }}"
+             role="dialog" aria-modal="true" aria-labelledby="case-{{ realm.slug }}" data-case="{{ realm.slug }}" hidden>
+      <div class="flex flex-wrap items-center justify-between gap-3 p-2.5 sm:px-4 sm:py-3.5">
+        <div class="flex min-w-0 items-center gap-3 rounded border border-gold-600 bg-wood-900 px-4 py-2.5">
+          <span class="size-3 flex-none rounded-full" style="background: {{ realm.color }}"></span>
+          <div class="flex min-w-0 flex-col gap-0.5">
+            <h2 id="case-{{ realm.slug }}" class="font-display text-[clamp(18px,2.4vw,24px)] font-bold tracking-[.05em] text-ivory">{{ realm.name }}</h2>
+            <p class="text-[13px] text-sand">{{ realm.blurb }}</p>
+          </div>
+        </div>
+        <button type="button" class="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-gold-400/50 bg-wood-900 px-4 text-sm font-medium text-cream hover:border-gold-400 hover:bg-wood-800" data-close-case>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M13 8H3"/><path d="M7 4L3 8l4 4"/></svg>
+          Back to the aisle
+        </button>
+      </div>
+      <div class="mx-2 min-h-0 flex-1 overflow-y-auto rounded bg-[#150D07] shadow-[inset_0_0_30px_rgba(0,0,0,.7)] sm:mx-3.5">
+        <ul class="book-rows flex flex-wrap content-start gap-x-1 px-2.5 sm:px-[18px]" role="list">
+          {% for book in realm.books %}
+          {% set n = counts.get((realm.slug, book.slug), 0) %}
+          <li class="flex h-[210px] items-end pb-4">
+            <a href="{{ url_for('main.book', realm_slug=realm.slug, book_slug=book.slug) }}"
+               class="book-spine relative flex items-center justify-center rounded-t-[3px] rounded-b-[1px] py-[22px] text-ivory no-underline transition-transform duration-200 hover:-translate-y-2.5 hover:text-white focus-visible:-translate-y-2.5 {{ 'is-last' if open_realm and realm.slug == open_realm.slug and book.slug == highlight }}"
+               style="width: {{ book.spine.width }}px; height: {{ book.spine.height }}px; background: {{ book.spine.color }}"
+               title="{{ book.title }} · {{ n }} {{ 'entry' if n == 1 else 'entries' }}">
+              <span class="max-h-full overflow-hidden text-center text-xs leading-tight font-medium tracking-[.03em] [writing-mode:vertical-rl]">{{ book.title }}</span>
+              <span class="sr-only">, {{ n }} {{ 'entry' if n == 1 else 'entries' }}</span>
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      <div class="flex flex-wrap justify-between gap-2 px-4 pt-3 pb-3.5 text-[13px] text-sand">
+        <span>Choose a book to open it.</span>
+        <span>{{ realm.books|length }} books on this shelf</span>
+      </div>
+    </section>
+    {% endfor %}
+  </div>
+
+  {% if arriving %}<div class="pointer-events-none absolute inset-0 z-[60] animate-fade-out bg-[#FFFBEF]" aria-hidden="true"></div>{% endif %}
+  <div class="leave-veil pointer-events-none absolute inset-0 z-[61] bg-[#FFFBEF]" aria-hidden="true"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/aisle.js') }}?v={{ config.ASSET_VERSION }}" defer></script>
+{% endblock %}

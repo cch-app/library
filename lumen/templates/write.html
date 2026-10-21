@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% from "partials/topbar.html" import topbar %}
+{% block title %}Write in “{{ book.title }}” — Lumen Archive{% endblock %}
+
+{% macro field_error(name) %}
+{% if errors.get(name) %}<p id="{{ name }}-error" class="mt-1.5 font-sans text-sm text-[#9B2C1A]">{{ errors[name] }}</p>{% endif %}
+{% endmacro %}
+
+{% set input_cls = "mt-1.5 block w-full rounded-md border border-[#B9A57F] bg-[#FBF6EA] px-3.5 py-2.5 font-sans text-base text-ink placeholder:text-ink-muted/70 focus:border-rust focus:outline-2 focus:outline-rust/40" %}
+{% set label_cls = "block font-sans text-sm font-semibold text-ink" %}
+
+{% block body %}
+<div class="min-h-dvh-safe bg-[radial-gradient(ellipse_70%_55%_at_50%_30%,rgba(255,214,140,.14),rgba(255,214,140,0)_70%),repeating-linear-gradient(to_bottom,#1C120B_0_46px,#21160D_46px_48px)] text-cream">
+  {{ topbar() }}
+  <main id="main" class="mx-auto w-full max-w-2xl px-4 pt-2 pb-16">
+    <a href="{{ url_for('main.book', realm_slug=realm.slug, book_slug=book.slug) }}" class="mb-4 inline-flex min-h-11 items-center gap-2 text-sm text-gold-400 no-underline hover:text-gold-200">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M13 8H3"/><path d="M7 4L3 8l4 4"/></svg>
+      Back to the book
+    </a>
+
+    <form method="post" enctype="multipart/form-data" novalidate
+          class="rounded-lg bg-parchment px-5 py-7 font-serif text-ink shadow-[0_0_0_6px_#4A2A18,0_30px_70px_rgba(0,0,0,.6)] sm:px-10 sm:py-9">
+      <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+      <p class="font-sans text-[11px] tracking-[.18em] text-rust uppercase">{{ realm.name }} · {{ book.title }}</p>
+      <h1 class="mt-2 font-display text-[clamp(24px,4vw,32px)] leading-tight font-bold">Write the next page</h1>
+      <p class="mt-2 text-[15px] text-ink-soft italic">Your entry becomes the newest page of this book.</p>
+
+      {% if errors.get("form") %}
+      <p class="mt-5 rounded-md border border-[#9B2C1A]/40 bg-[#9B2C1A]/10 px-4 py-3 font-sans text-sm text-[#9B2C1A]" role="alert">{{ errors["form"] }}</p>
+      {% elif errors %}
+      <p class="mt-5 rounded-md border border-[#9B2C1A]/40 bg-[#9B2C1A]/10 px-4 py-3 font-sans text-sm text-[#9B2C1A]" role="alert">Please fix the highlighted fields.</p>
+      {% endif %}
+
+      <div class="mt-6 flex flex-col gap-5">
+        <div>
+          <label for="title" class="{{ label_cls }}">Title</label>
+          <input id="title" name="title" type="text" required maxlength="{{ limits.title }}" value="{{ form.title }}" class="{{ input_cls }}" {% if errors.get('title') %}aria-invalid="true" aria-describedby="title-error"{% endif %}>
+          {{ field_error("title") }}
+        </div>
+        <div>
+          <label for="author" class="{{ label_cls }}">Your name <span class="font-normal text-ink-muted">(optional)</span></label>
+          <input id="author" name="author" type="text" maxlength="{{ limits.author }}" value="{{ form.author }}" autocomplete="name" class="{{ input_cls }}" {% if errors.get('author') %}aria-invalid="true" aria-describedby="author-error"{% endif %}>
+          {{ field_error("author") }}
+        </div>
+        <div>
+          <label for="body" class="{{ label_cls }}">Entry</label>
+          <p id="body-hint" class="mt-1 font-sans text-[13px] text-ink-muted">Leave a blank line between paragraphs. Up to {{ "{:,}".format(limits.body) }} characters.</p>
+          <textarea id="body" name="body" rows="12" required maxlength="{{ limits.body }}" class="{{ input_cls }} font-serif leading-relaxed" aria-describedby="body-hint{% if errors.get('body') %} body-error{% endif %}" {% if errors.get('body') %}aria-invalid="true"{% endif %}>{{ form.body }}</textarea>
+          {{ field_error("body") }}
+        </div>
+
+        <fieldset class="rounded-md border border-[#D8CBAE] px-4 pt-2 pb-4">
+          <legend class="px-1 font-sans text-sm font-semibold">Illustration <span class="font-normal text-ink-muted">(optional)</span></legend>
+          <label for="image" class="{{ label_cls }} mt-2">Image</label>
+          <input id="image" name="image" type="file" accept="image/png,image/jpeg,image/gif,image/webp"
+                 class="mt-1.5 block w-full font-sans text-sm text-ink file:mr-3 file:min-h-11 file:cursor-pointer file:rounded-full file:border-0 file:bg-ink file:px-4 file:font-semibold file:text-parchment hover:file:bg-black" {% if errors.get('image') %}aria-invalid="true" aria-describedby="image-error"{% endif %}>
+          <p class="mt-1 font-sans text-[13px] text-ink-muted">PNG, JPEG, GIF or WebP, up to 4 MB. Stored in Vercel Blob.</p>
+          {{ field_error("image") }}
+          <label for="image_alt" class="{{ label_cls }} mt-4">Describe the image</label>
+          <input id="image_alt" name="image_alt" type="text" maxlength="200" value="{{ form.image_alt }}" class="{{ input_cls }}" {% if errors.get('image_alt') %}aria-invalid="true" aria-describedby="image_alt-error"{% endif %}>
+          {{ field_error("image_alt") }}
+          <label for="caption" class="{{ label_cls }} mt-4">Caption <span class="font-normal text-ink-muted">(optional)</span></label>
+          <input id="caption" name="caption" type="text" maxlength="200" value="{{ form.caption }}" class="{{ input_cls }}">
+        </fieldset>
+
+        {% if passcode_required %}
+        <div>
+          <label for="passcode" class="{{ label_cls }}">Contributor passcode</label>
+          <input id="passcode" name="passcode" type="password" required autocomplete="current-password" class="{{ input_cls }}" {% if errors.get('passcode') %}aria-invalid="true" aria-describedby="passcode-error"{% endif %}>
+          {{ field_error("passcode") }}
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="mt-8 flex flex-wrap items-center gap-3">
+        <button type="submit" class="inline-flex min-h-12 cursor-pointer items-center rounded-full bg-ink px-6 font-sans text-[15px] font-semibold text-parchment hover:bg-black">Publish to the book</button>
+        <a href="{{ url_for('main.book', realm_slug=realm.slug, book_slug=book.slug) }}" class="inline-flex min-h-12 items-center px-3 font-sans text-sm text-rust hover:text-ink">Cancel</a>
+      </div>
+    </form>
+  </main>
+</div>
+{% endblock %}

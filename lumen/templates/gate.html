@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% from "partials/topbar.html" import topbar %}
+{% block title %}Lumen Archive — The Gate{% endblock %}
+
+{% block body %}
+<div class="gate-stage relative flex h-dvh-safe min-h-[520px] flex-col overflow-hidden bg-[radial-gradient(ellipse_at_50%_72%,#161C31_0%,#07090F_62%)] font-sans text-cream"
+     data-gate data-phase="{{ 'away' if returning else 'closed' }}" {% if returning %}data-snap data-returning{% endif %}
+     data-next="{{ url_for('main.aisle', **{'from': 'gate'}) }}">
+
+  {{ topbar(extra_class="gate-topbar") }}
+
+  {% for left, top, delay in [(18,88,0),(27,95,2.1),(36,82,4.4),(44,97,1.3),(57,90,3.2),(63,99,5.6),(72,86,0.8),(81,94,6.3),(10,76,7.1),(90,80,3.9)] %}
+  <span class="mote" style="left: {{ left }}%; top: {{ top }}%; animation-delay: {{ delay }}s" aria-hidden="true"></span>
+  {% endfor %}
+
+  <main id="main" class="relative flex min-h-0 flex-1 flex-col items-center justify-center gap-[clamp(18px,4vh,44px)] px-4 pt-2 pb-[clamp(24px,5vh,56px)] text-center">
+    <div class="gate-copy flex max-w-3xl flex-col items-center gap-3">
+      <p class="text-xs tracking-[.32em] text-gold-500 uppercase">A library of every field</p>
+      <h1 class="font-display text-[clamp(24px,3.6vw,46px)] leading-tight font-medium text-ivory">Beyond this door, knowledge has no borders.</h1>
+    </div>
+
+    <div class="gate-wrap relative">
+      <div class="door-scale relative">
+        <div class="pointer-events-none absolute top-1/2 left-1/2 -mt-[360px] -ml-[310px] h-[720px] w-[620px] animate-breathe-slow bg-[radial-gradient(ellipse_at_center,rgba(245,196,81,.22),rgba(245,196,81,0)_62%)]" aria-hidden="true"></div>
+        <button type="button" class="gate-door-btn relative block cursor-pointer rounded-t-[180px] rounded-b-lg focus-visible:outline-offset-[14px]" data-door aria-label="Open the door">
+          <span class="door block">
+            <span class="door-light block" aria-hidden="true">
+              <span class="door-rays block animate-spin-slow"></span>
+              <span class="absolute inset-x-0 bottom-0 block h-[120px]">
+                <span class="absolute bottom-[34px] left-[30px] block h-[18px] w-[70px] rounded-[50%_50%_40%_40%] bg-[#5B3A1C] opacity-55"></span>
+                <span class="absolute bottom-[58px] left-[210px] block h-[22px] w-[96px] rounded-[50%_50%_40%_40%] bg-[#5B3A1C] opacity-55"></span>
+                <span class="absolute bottom-4 left-32 block h-3 w-[54px] rounded-[50%_50%_40%_40%] bg-[#5B3A1C] opacity-55"></span>
+              </span>
+            </span>
+            {% for side in ['l', 'r'] %}
+            <span class="door-leaf door-leaf-{{ side }} block" aria-hidden="true">
+              <span class="door-panel door-panel-top block top-[34px] h-[196px]"></span>
+              <span class="door-panel block top-[300px] h-[168px]"></span>
+              <span class="door-ring block {{ 'right-3.5' if side == 'l' else 'left-3.5' }}"></span>
+            </span>
+            {% endfor %}
+            <span class="door-seam block animate-breathe" aria-hidden="true"></span>
+          </span>
+        </button>
+        <div class="pointer-events-none absolute -bottom-[38px] left-1/2 -ml-[260px] h-[60px] w-[520px] bg-[radial-gradient(ellipse_at_center,rgba(245,196,81,.35),rgba(245,196,81,0)_70%)]" aria-hidden="true"></div>
+      </div>
+    </div>
+
+    <p class="gate-hint flex items-center gap-2.5 text-xs tracking-[.2em] text-[#BDB5A4] uppercase">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#F5C451" stroke-width="1.5" aria-hidden="true"><path d="M8 2v9"/><path d="M4 7l4 4 4-4"/><path d="M3 14h10"/></svg>
+      Touch the door to enter
+    </p>
+  </main>
+
+  {# The Gatekeeper's question, centred over the half-open door #}
+  <div class="dlg-layer absolute inset-0 z-[15] flex items-center justify-center bg-night-950/50 p-4">
+    <div class="dlg-box relative w-full max-w-[560px] rounded-[10px] border-2 border-gold-400 bg-[rgba(10,12,22,.94)] px-5 pt-9 pb-5 shadow-[0_0_0_4px_#0A0C16,0_0_0_6px_rgba(245,196,81,.45),0_24px_60px_rgba(0,0,0,.6)] sm:px-7"
+         role="dialog" aria-modal="true" aria-labelledby="dlg-name" aria-describedby="dlg-text" tabindex="-1" data-dialog>
+      <p id="dlg-name" class="absolute -top-[19px] left-1/2 -translate-x-1/2 rounded-md bg-gold-400 px-[18px] py-[7px] font-display text-sm font-bold tracking-[.12em] whitespace-nowrap text-wood-900">GATEKEEPER</p>
+      <p id="dlg-text" class="mb-5 text-center text-[clamp(16px,2.2vw,20px)] leading-relaxed text-cream">
+        {% set words = "Traveler, the Archive of every field lies beyond this light.".split() %}
+        {% for w in words %}<span class="dlg-word" style="animation-delay: {{ '%.2f'|format(1.5 + loop.index0 * 0.07) }}s">{{ w }}</span> {% endfor %}
+        {% for w in "Will you enter the realm?".split() %}<span class="dlg-word font-semibold text-gold-400" style="animation-delay: {{ '%.2f'|format(2.3 + loop.index0 * 0.07) }}s">{{ w }}</span> {% endfor %}
+      </p>
+      <div class="dlg-choices flex flex-wrap gap-3" role="group" aria-label="Enter the realm?">
+        {% for label, action in [("Yes", "yes"), ("No", "no")] %}
+        <button type="button" class="choice flex min-h-[52px] flex-[1_1_180px] items-center justify-center gap-3 rounded-lg border border-gold-400/35 px-4 text-base font-medium text-cream hover:border-gold-400 hover:bg-gold-400/12 hover:text-white focus-visible:border-gold-400 focus-visible:bg-gold-400/12" data-choice="{{ action }}">
+          <svg class="choice-caret" width="12" height="14" viewBox="0 0 12 14" fill="#F5C451" aria-hidden="true"><path d="M1 1l10 6-10 6z"/></svg>
+          {{ label }}
+        </button>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="gate-flash pointer-events-none absolute inset-0 z-20 bg-[#FFFBEF]" aria-hidden="true"></div>
+  <div class="gate-fallback absolute inset-0 z-[21] flex items-center justify-center">
+    <a href="{{ url_for('main.aisle', **{'from': 'gate'}) }}" class="inline-flex min-h-12 items-center gap-2.5 rounded-full bg-wood-800 px-6 text-[15px] font-semibold text-gold-100 no-underline hover:bg-[#3F2C10] hover:text-white">
+      Continue into the Archive
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 8h10"/><path d="M9 4l4 4-4 4"/></svg>
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/gate.js') }}?v={{ config.ASSET_VERSION }}" defer></script>
+{% endblock %}

@@ -1,0 +1,12 @@
+.git
+.venv
+.vercel
+.data
+.env
+.env*.local
+.claude
+.tokensave
+.pytest_cache
+__pycache__
+*.pyc
+node_modules
