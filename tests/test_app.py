@@ -107,6 +107,52 @@ def test_media_rejects_paths_outside_media(client):
     assert client.get("/media/../secret").status_code == 404
 
 
+def test_search_terminal_boots_on_first_visit(client):
+    html = client.get("/search").get_data(as_text=True)
+    assert 'data-phase="boot"' in html
+    assert "8 REALMS, 102 BOOKS" in html
+
+
+def test_search_by_title_keyword_links_to_the_entry_page(client):
+    html = client.get("/search?q=bounded+loads").get_data(as_text=True)
+    assert 'data-phase="ready"' in html  # a submitted search doesn't reboot the terminal
+    assert "RECORDS FOUND: 1" in html
+    assert "Bounded loads: taming hot spots" in html
+    # second-newest entry in its book, so page index 2
+    assert "/realms/computing/consistent-hashing?page=2" in html
+
+
+def test_search_by_category_and_book(client):
+    html = client.get("/search?category=computing&book=computing/consistent-hashing").get_data(as_text=True)
+    assert "RECORDS FOUND: 6" in html  # 5 entries + the book itself
+    assert "/realms?shelf=computing&amp;book=consistent-hashing" in html
+    html = client.get("/search?category=physics&q=hash").get_data(as_text=True)
+    assert "NO RECORDS FOUND" in html
+
+
+def test_book_list_only_shows_the_chosen_category(client):
+    html = client.get("/search?category=physics").get_data(as_text=True)
+    select = html[html.index('id="f-book"'):html.index("</select>", html.index('id="f-book"'))]
+    assert "All books in Physics" in select
+    assert "Optics" in select and "Consistent hashing" not in select
+    # the full list stays available for when the category changes
+    assert "Consistent hashing" in html[html.index("data-book-groups"):]
+
+
+def test_search_matches_book_names(client):
+    html = client.get("/search?q=hash").get_data(as_text=True)
+    assert "Hash tables" in html and "Why hash mod N breaks" in html
+
+
+def test_search_ignores_unknown_filters(client):
+    html = client.get("/search?category=nope&book=x/y&q=kant").get_data(as_text=True)
+    assert "RECORDS FOUND: 1" in html and "Kant" in html
+
+
+def test_aisle_can_start_at_the_library_computer(client):
+    assert b"data-at-desk-start" in client.get("/realms?at=desk").data
+
+
 @pytest.mark.parametrize("entries,leaves", [(0, 1), (1, 1), (5, 3), (6, 4)])
 def test_leaf_layout(entries, leaves):
     pages = build_pages([None] * entries)  # entries are only counted here

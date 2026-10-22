@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% from "partials/topbar.html" import topbar %}
+{% block title %}Search the library — Lumen Archive{% endblock %}
+{% block description %}Search the Lumen Archive by category, book name and title keyword.{% endblock %}
+
+{% macro power_icon() %}<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M8 1.5v6"/><path d="M4.2 4a5.5 5.5 0 1 0 7.6 0"/></svg>{% endmacro %}
+
+{% block body %}
+<div class="term-stage relative flex min-h-dvh-safe flex-col overflow-hidden bg-[#0B0D14] text-cream"
+     data-terminal data-phase="{{ 'ready' if booted else 'boot' }}">
+  <div class="term-wall pointer-events-none absolute inset-x-0 top-0 bottom-[30%]" aria-hidden="true"></div>
+  <div class="term-desk pointer-events-none absolute inset-x-0 bottom-0 h-[30%]" aria-hidden="true"></div>
+  <div class="pointer-events-none absolute top-[22%] left-[8%] -mt-[260px] -ml-[260px] size-[520px] rounded-full bg-[radial-gradient(circle,rgba(255,220,150,.18),rgba(255,220,150,0)_65%)]" aria-hidden="true"></div>
+
+  {{ topbar(current="search", extra_class="term-topbar bg-gradient-to-b from-[#07080C]/85 to-transparent transition-opacity duration-500") }}
+
+  <main id="main" class="term-room relative z-[2] flex flex-1 items-end justify-center gap-10 px-2.5 pt-1 pb-4 md:px-4 md:pt-2 md:pb-7">
+    <div class="flex w-[calc(100vw-20px)] flex-col items-center md:w-[min(1040px,calc(100vw-32px))]">
+      {# ── the monitor ── #}
+      <div class="relative box-border w-full rounded-t-2xl rounded-b-[10px] bg-[linear-gradient(160deg,#2A2419,#18140E_60%,#120F0A)] px-3 pt-3 shadow-[inset_0_0_0_2px_#3A3020,inset_0_2px_0_rgba(255,230,170,.12),0_0_0_1px_#0A0806,0_30px_60px_rgba(0,0,0,.6)] md:rounded-t-[22px] md:rounded-b-[14px] md:px-[22px] md:pt-[22px]">
+        <div class="relative rounded-xl bg-[#0C0A07] p-2 shadow-[inset_0_0_0_2px_#2A2216,inset_0_6px_14px_rgba(0,0,0,.8)] md:rounded-2xl md:p-3.5">
+          <div class="term-screen relative overflow-hidden">
+            <div class="term-crt absolute inset-0 font-mono text-[var(--ph)] [text-shadow:0_0_6px_var(--ph-glow)]">
+
+              {# start-up messages #}
+              <div class="term-boot absolute inset-0 flex flex-col gap-1.5 p-[clamp(18px,4%,34px)] text-[clamp(12px,1.5vw,15px)] leading-relaxed" aria-hidden="true">
+                {% set boot = [
+                  "LUMEN ARCHIVE CATALOG SYSTEM  v3.1",
+                  "TERMINAL 03 · READING ROOM",
+                  " ",
+                  "MEMORY CHECK ............ 640K OK",
+                  "MOUNTING CARD CATALOG ... %d REALMS, %d BOOKS" % (catalog.realms|length, book_total),
+                  "INDEXING ENTRIES ........ %d TITLES" % entry_total,
+                  "CONNECTING TO STACKS .... OK",
+                ] %}
+                {% for line in boot %}<p class="term-line whitespace-pre-wrap" style="animation-delay: {{ '%.2f'|format(1.45 + loop.index0 * 0.2) }}s">{{ line }}</p>{% endfor %}
+                <p class="term-line" style="animation-delay: 2.9s">READY. <span class="term-cursor"></span></p>
+                <span class="absolute right-[18px] bottom-3.5 text-xs tracking-[.12em] text-[var(--ph-dim)]">TAP TO SKIP</span>
+              </div>
+
+              {# the catalog search #}
+              <div class="term-ui absolute inset-0 flex flex-col">
+                <div class="flex flex-wrap justify-between gap-x-4 gap-y-1 border-b border-dashed border-[var(--ph-dim)] px-[clamp(16px,3%,28px)] pt-4 pb-2.5 text-[13px] tracking-[.08em]">
+                  <span>LUMEN ARCHIVE · ONLINE PUBLIC CATALOG</span>
+                  <span class="text-[var(--ph-dim)]">TERMINAL 03 · READING ROOM</span>
+                </div>
+                <div class="term-scroll min-h-0 flex-1 overflow-y-auto px-[clamp(16px,3%,28px)] pt-3.5 pb-5">
+                  <h1 class="mb-1 text-[clamp(18px,2.2vw,22px)] font-semibold tracking-[.06em]">SEARCH THE LIBRARY</h1>
+                  <p class="mb-4 text-[13px] text-[var(--ph-dim)]">Search like at the library desk: pick a category, narrow to a book, then type words from a title.</p>
+
+                  <form method="get" action="{{ url_for('main.search') }}" role="search" aria-label="Library search" class="grid grid-cols-1 gap-x-4 gap-y-3 md:grid-cols-3" data-search-form>
+                    <div class="flex min-w-0 flex-col gap-1.5">
+                      <label for="f-category" class="text-xs tracking-[.14em] text-[var(--ph-dim)]">1 · CATEGORY</label>
+                      <select id="f-category" name="category" class="term-ctrl" data-category>
+                        <option value="">All realms</option>
+                        {% for realm in catalog.realms %}<option value="{{ realm.slug }}" {% if query.category == realm.slug %}selected{% endif %}>{{ realm.name }}</option>{% endfor %}
+                      </select>
+                    </div>
+                    <div class="flex min-w-0 flex-col gap-1.5">
+                      <label for="f-book" class="text-xs tracking-[.14em] text-[var(--ph-dim)]">2 · BOOK NAME</label>
+                      {% macro book_group(realm) %}
+                        <optgroup label="{{ realm.name }}" data-realm="{{ realm.slug }}">
+                          {% for book in realm.books %}{% set v = realm.slug ~ '/' ~ book.slug %}<option value="{{ v }}" {% if query.book == v %}selected{% endif %}>{{ book.title }}</option>{% endfor %}
+                        </optgroup>
+                      {% endmacro %}
+                      {% set chosen = catalog.get_realm(query.category) if query.category else none %}
+                      {# Only the chosen category's books are listed; search.js rebuilds the list when the category changes. #}
+                      <select id="f-book" name="book" class="term-ctrl" data-book>
+                        <option value="" data-all-books>{{ "All books in " ~ chosen.name if chosen else "All books" }}</option>
+                        {% for realm in catalog.realms if not chosen or realm.slug == chosen.slug %}{{ book_group(realm) }}{% endfor %}
+                      </select>
+                      <template data-book-groups>{% for realm in catalog.realms %}{{ book_group(realm) }}{% endfor %}</template>
+                    </div>
+                    <div class="flex min-w-0 flex-col gap-1.5">
+                      <label for="f-q" class="text-xs tracking-[.14em] text-[var(--ph-dim)]">3 · TITLE KEYWORD</label>
+                      <input id="f-q" name="q" type="search" value="{{ query.keyword }}" placeholder="e.g. hashing" autocomplete="off" maxlength="100" class="term-ctrl">
+                    </div>
+                    <div class="col-span-full flex flex-wrap items-center gap-2.5">
+                      <button type="submit" class="term-btn term-btn-solid">
+                        <svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M12.5 12.5L17 17"/></svg>
+                        SEARCH
+                      </button>
+                      <a href="{{ url_for('main.search', clear=1) }}" class="term-btn term-btn-ghost no-underline">CLEAR</a>
+                    </div>
+                  </form>
+
+                  {% if error %}
+                  <p class="mt-5 text-sm leading-relaxed" role="alert">&gt; {{ error }}</p>
+                  {% elif query.is_empty %}
+                  <p class="mt-5 text-sm leading-relaxed text-[var(--ph-dim)]">&gt; Choose a category on its own to list its books,<br>&gt; or try a keyword such as “hashing”, “ring” or “loads”.<span class="term-cursor ml-1.5"></span></p>
+                  {% else %}
+                  <p class="mt-5 mb-2.5 border-b border-dashed border-[var(--ph-dim)] pb-1.5 text-[13px] tracking-[.12em]" role="status">RECORDS FOUND: {{ results|length }}{% if results|length >= max_results %} (FIRST {{ max_results }}){% endif %}</p>
+                  {% if not results %}
+                  <p class="text-sm leading-relaxed text-[var(--ph-dim)]">&gt; NO RECORDS FOUND.<br>&gt; Try a shorter keyword, or set CATEGORY to “All realms”.</p>
+                  {% endif %}
+                  <ol class="flex flex-col" role="list">
+                    {% for r in results %}
+                    <li class="grid grid-cols-[34px_minmax(0,1fr)] gap-x-3 gap-y-1 border-b border-dotted border-[rgba(200,150,58,.35)] py-3 md:grid-cols-[44px_minmax(0,1fr)]">
+                      <span class="pt-0.5 text-[13px] text-[var(--ph-dim)]">{{ '%03d'|format(loop.index) }}</span>
+                      <div class="flex min-w-0 flex-col gap-1">
+                        <div><span class="mr-2.5 inline-block border border-[var(--ph-dim)] px-1.5 align-[2px] text-[11px] tracking-[.14em] text-[var(--ph-dim)]">{{ r.kind|upper }}</span><span class="text-base font-semibold">{{ r.title }}</span></div>
+                        <div class="grid grid-cols-1 gap-x-7 gap-y-0.5 text-[13px] text-[var(--ph-dim)] md:grid-cols-[repeat(2,minmax(0,max-content))]">
+                          <span>CATEGORY: {{ r.realm.name }}</span>
+                          <span>BOOK: {{ r.book_title }}</span>
+                          {% if r.kind == "entry" %}<span>PUBLISHED: <time datetime="{{ r.published_at.isoformat() }}">{{ r.published_at.strftime('%Y-%m-%d') }}</time></span>{% else %}<span>ENTRIES: {{ r.entry_count }}</span>{% endif %}
+                          <span>LOCATION: {{ r.location }}</span>
+                        </div>
+                        <div class="mt-1.5">
+                          {% if r.kind == "entry" %}
+                          <a href="{{ url_for('main.book', realm_slug=r.realm.slug, book_slug=r.book_slug, page=r.page) }}" class="term-btn term-btn-ghost min-h-10 px-3.5 text-[13px] no-underline" data-power-link>OPEN BOOK ▸</a>
+                          {% else %}
+                          <a href="{{ url_for('main.aisle', shelf=r.realm.slug, book=r.book_slug) }}" class="term-btn term-btn-ghost min-h-10 px-3.5 text-[13px] no-underline" data-power-link>GO TO SHELF ▸</a>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </li>
+                    {% endfor %}
+                  </ol>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            <div class="term-dot pointer-events-none absolute top-1/2 left-1/2 z-[3] -mt-1 -ml-1 size-2 rounded-full bg-white" aria-hidden="true"></div>
+            <div class="term-scan pointer-events-none absolute inset-0 z-[4]" aria-hidden="true"></div>
+            <div class="term-glass pointer-events-none absolute inset-0 z-[5] rounded-[inherit]" aria-hidden="true"></div>
+            <button type="button" class="term-skip absolute inset-0 z-[6] cursor-pointer focus-visible:outline-[var(--ph)] focus-visible:-outline-offset-[6px]" data-skip aria-label="Skip the start-up screen"></button>
+          </div>
+        </div>
+        <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2.5 px-1.5 pt-3 pb-3.5">
+          <span class="flex items-center gap-2.5 rounded-[3px] border border-gold-800 bg-[#1C150C] px-3 py-1 font-display text-[10px] tracking-[.12em] text-[#E8D3A0] md:text-xs md:tracking-[.18em]">
+            <svg width="14" height="16" viewBox="0 0 26 30" fill="none" stroke="#C99A3B" stroke-width="2" aria-hidden="true"><path d="M2 29V13a11 11 0 0 1 22 0v16Z"/><path d="M13 4v25"/></svg>
+            LIBRARY COMPUTER · TERMINAL 03
+          </span>
+          <span class="flex items-center gap-3">
+            <span class="term-led size-[9px] rounded-full" aria-hidden="true"></span>
+            <a href="{{ url_for('main.aisle', at='desk') }}" class="inline-flex min-h-11 items-center gap-2 rounded-full border border-gold-400/45 bg-[#1C150C] px-3.5 text-[13px] font-medium text-cream no-underline hover:border-gold-400 hover:bg-wood-800 hover:text-cream" data-power-link>
+              {{ power_icon() }} Turn off &amp; return to the aisle
+            </a>
+          </span>
+        </div>
+      </div>
+      <div class="h-3.5 w-[120px] bg-[linear-gradient(to_right,#120F0A,#2A2419_50%,#120F0A)] md:h-[26px]" aria-hidden="true"></div>
+      <div class="h-3 w-[300px] rounded-t-lg rounded-b-[3px] bg-[linear-gradient(#2A2419,#120F0A)] shadow-[0_8px_16px_rgba(0,0,0,.6)]" aria-hidden="true"></div>
+      {# keyboard, decorative #}
+      <div class="term-keyboard mt-4 hidden flex-col gap-[5px] rounded-[10px] bg-[linear-gradient(#241E15,#16120C)] px-3 pt-2.5 pb-3 shadow-[inset_0_1px_0_rgba(255,230,170,.1),0_10px_20px_rgba(0,0,0,.55)] md:flex" aria-hidden="true">
+        {% for n in [13, 12, 12, 11] %}{% set row = loop.index0 %}
+        <div class="flex justify-center gap-[5px]">{% for i in range(n) %}<span class="h-5 rounded bg-[linear-gradient(#3A3226,#2A241A)] shadow-[inset_0_-2px_0_rgba(0,0,0,.45),0_1px_0_#0C0A07] {{ 'w-11' if i == 0 and row >= 2 else 'w-[30px]' }}"></span>{% endfor %}</div>
+        {% endfor %}
+        <div class="flex justify-center gap-[5px]">{% for w in ['w-11', 'w-11', 'w-[230px]', 'w-11', 'w-11'] %}<span class="h-5 rounded bg-[linear-gradient(#3A3226,#2A241A)] shadow-[inset_0_-2px_0_rgba(0,0,0,.45),0_1px_0_#0C0A07] {{ w }}"></span>{% endfor %}</div>
+      </div>
+    </div>
+
+    {# the card catalog cabinet, a nod to the library #}
+    <div class="mb-[60px] hidden flex-col gap-2 rounded-md bg-[linear-gradient(#3A2616,#2A1B10)] p-3 shadow-[inset_0_0_0_2px_#4E331D,0_20px_40px_rgba(0,0,0,.6)] xl:flex" aria-hidden="true">
+      <span class="text-center font-display text-[11px] tracking-[.2em] text-[#E8D3A0]">CARD CATALOG</span>
+      <div class="grid grid-cols-2 gap-1.5">
+        {% for label in ['A–C', 'D–F', 'G–I', 'J–L', 'M–O', 'P–R', 'S–U', 'V–Z'] %}
+        <span class="flex h-10 w-16 flex-col items-center justify-center gap-1 rounded-[3px] bg-[#5A3A20] shadow-[inset_0_0_0_1px_#6A4526]">
+          <span class="h-[9px] w-[30px] border border-gold-800 bg-[#E8DCC0] text-center font-mono text-[7px] leading-2 text-ink">{{ label }}</span>
+          <span class="h-1 w-4 rounded-sm bg-gold-600"></span>
+        </span>
+        {% endfor %}
+      </div>
+    </div>
+  </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/search.js') }}?v={{ config.ASSET_VERSION }}" defer></script>
+{% endblock %}

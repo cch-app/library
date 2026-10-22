@@ -14,7 +14,7 @@
   </button>
   <nav id="nav-main" class="nav-panel" aria-label="Primary">
     <a href="{{ url_for('main.aisle') }}" class="rounded-lg px-1.5 py-3 text-sm tracking-wide no-underline {{ 'text-gold-400' if current == 'realms' else 'text-haze hover:text-gold-200' }}" {% if current == 'realms' %}aria-current="page"{% endif %}>Realms</a>
-    <a href="#" class="rounded-lg px-1.5 py-3 text-sm tracking-wide text-haze no-underline hover:text-gold-200">Search</a>
+    <a href="{{ url_for('main.search') }}" class="rounded-lg px-1.5 py-3 text-sm tracking-wide no-underline {{ 'text-gold-400' if current == 'search' else 'text-haze hover:text-gold-200' }}" {% if current == 'search' %}aria-current="page"{% endif %}>Search</a>
     <a href="#" class="rounded-lg px-1.5 py-3 text-sm tracking-wide text-haze no-underline hover:text-gold-200">Paths</a>
     <a href="#" class="rounded-lg px-1.5 py-3 text-sm tracking-wide text-haze no-underline hover:text-gold-200">About</a>
   </nav>

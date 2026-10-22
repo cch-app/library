@@ -6,7 +6,9 @@
 <div class="aisle-stage relative h-dvh-safe min-h-[520px] overflow-hidden bg-[#07080C] text-cream"
      data-aisle data-stations="{{ catalog.station_count }}"
      data-exit-href="{{ url_for('main.gate', **{'from': 'library'}) }}"
-     {% if open_realm %}data-open="{{ open_realm.slug }}"{% endif %}>
+     data-search-href="{{ url_for('main.search') }}"
+     {% if open_realm %}data-open="{{ open_realm.slug }}"{% endif %}
+     {% if at_desk %}data-at-desk-start{% endif %}>
 
   {# ── the 3D aisle ── #}
   <div class="aisle-scene absolute inset-0" data-scene>
@@ -17,15 +19,31 @@
         <div class="aisle-plane aisle-wall aisle-wall-l"></div>
         <div class="aisle-plane aisle-wall aisle-wall-r"></div>
 
-        {# The far wall: a framed painting, not another door #}
-        <div class="aisle-plane aisle-back flex flex-col items-center justify-center gap-[18px]">
-          <div class="h-2.5 w-[70%] rounded-[50%] bg-[radial-gradient(ellipse,rgba(255,236,190,.9),rgba(255,236,190,0)_70%)]"></div>
-          <div class="art-frame w-[72%] rounded-[3px] p-2.5">
+        {# The far wall: a framed painting, hung high so the library computer sits below it #}
+        <div class="aisle-plane aisle-back box-border flex flex-col items-center justify-start gap-3.5 pt-4">
+          <div class="h-2.5 w-[50%] rounded-[50%] bg-[radial-gradient(ellipse,rgba(255,236,190,.9),rgba(255,236,190,0)_70%)]"></div>
+          <div class="art-frame w-[42%] rounded-[3px] p-2.5">
             <div class="bg-wood-800 p-1.5">
               <img src="{{ url_for('static', filename='img/still-lake.svg') }}" alt="Painting of a lake among mountains at dawn" class="block h-auto w-full" width="400" height="260">
             </div>
           </div>
           <p class="rounded-[3px] border border-gold-600 bg-wood-900 px-3.5 py-1.5 text-center font-display text-[13px] tracking-[.08em] text-[#E8D3A0]">Dawn over the Still Lake</p>
+        </div>
+
+        {# The library computer on its desk, at the end of the aisle #}
+        <div class="cdesk">
+          <div class="cd-light" aria-hidden="true"></div>
+          <div class="cd-top" aria-hidden="true"></div>
+          <button type="button" class="cd-front" data-desk tabindex="-1" aria-hidden="true">
+            <span class="cd-drawer"><span class="cd-pull"></span></span>
+            <span class="cd-drawer"><span class="cd-pull"></span></span>
+            <span class="cd-plaque">LIBRARY COMPUTER</span>
+          </button>
+          <button type="button" class="cd-mon" data-desk data-desk-monitor aria-label="Walk to the library computer">
+            <span class="cd-case"><span class="cd-screen"><span class="cd-t1">SEARCH</span><span class="cd-t2">THE LIBRARY</span><span class="cd-cur"></span></span></span>
+            <span class="cd-neck"></span>
+            <span class="cd-foot"></span>
+          </button>
         </div>
 
         {% for i in range(catalog.station_count) %}
@@ -85,9 +103,21 @@
        aria-label="Bookshelves at this spot">
     <div class="flex items-center justify-between gap-3 text-xs tracking-[.16em] text-gold-500 uppercase">
       <span data-station-label>Aisle 1 of {{ catalog.station_count }}</span>
-      <span class="flex gap-1.5" aria-hidden="true">
-        {% for i in range(catalog.station_count) %}<span class="h-1 w-[22px] rounded-sm bg-night-600 data-[on]:bg-gold-400" data-pip="{{ i }}"></span>{% endfor %}
+      <span class="flex items-center gap-3">
+        <button type="button" class="inline-flex min-h-8 cursor-pointer items-center gap-1.5 rounded-full border border-gold-400/45 px-2.5 text-[11px] tracking-[.14em] text-cream uppercase hover:border-gold-400 hover:bg-gold-400/10" data-desk data-desk-chip>
+          <svg width="14" height="14" viewBox="0 0 18 18" fill="none" stroke="#F5C451" stroke-width="1.8" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M12.5 12.5L17 17"/></svg>
+          Library computer
+        </button>
+        <span class="flex gap-1.5" aria-hidden="true">
+          {% for i in range(catalog.station_count + 1) %}<span class="h-1 w-[22px] rounded-sm bg-night-600 data-[on]:bg-gold-400" data-pip="{{ i }}"></span>{% endfor %}
+        </span>
       </span>
+    </div>
+    <div class="flex" data-hud-desk hidden>
+      <button type="button" class="flex min-h-12 flex-1 cursor-pointer items-center justify-center gap-2.5 rounded-lg border border-night-600 px-3.5 text-sm font-medium text-cream hover:border-gold-400 hover:bg-gold-400/10 md:text-[15px]" data-search>
+        <svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="#F5C451" stroke-width="1.8" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M12.5 12.5L17 17"/></svg>
+        Search the library
+      </button>
     </div>
     {% for i in range(catalog.station_count) %}
     <div class="flex flex-wrap gap-2.5" data-hud-pair="{{ i }}" {% if i != 0 %}hidden{% endif %}>
@@ -149,6 +179,7 @@
 
   {% if arriving %}<div class="pointer-events-none absolute inset-0 z-[60] animate-fade-out bg-[#FFFBEF]" aria-hidden="true"></div>{% endif %}
   <div class="leave-veil pointer-events-none absolute inset-0 z-[61] bg-[#FFFBEF]" aria-hidden="true"></div>
+  <div class="search-veil pointer-events-none absolute inset-0 z-[61] bg-black" aria-hidden="true"></div>
 </div>
 {% endblock %}
 

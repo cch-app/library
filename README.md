@@ -6,6 +6,7 @@ A game-like library of knowledge from every field, built with **Flask**, **Tailw
 2. **The aisle of realms** (`/realms`): a first-person 3D aisle. Tap the upper aisle to walk forward and the lower aisle to step back; the green **EXIT** at the entrance plays the gate in reverse. Each bookshelf is a realm; tapping one turns you toward it and opens its bookcase of books (topics).
 3. **The book** (`/realms/<realm>/<book>`): an open book with a contents page and one page per entry, **newest first**. Pages turn over the spine in 3D. On phones the whole open book stays on the desk and the view glides between its left and right pages.
 4. **Write an entry** (`/realms/<realm>/<book>/write`): adds a new page (with an optional illustration) to the book. Entries and images are stored in Vercel Blob.
+5. **Search the library** (`/search`): a library computer on a reading-room desk. It powers on (the picture blooms from a bright line, start-up messages type out), then searches like a library catalog: **category**, **book name**, **title keyword**. Opening a result switches the computer off (the picture collapses to a line, then a dot) before going to the exact page of the entry, or to the bookshelf with the book highlighted. In the aisle, the **library computer** stands on a desk at the far end, under the painting; walk up to it, or use the *Library computer* shortcut, and choose **Search the library**.
 
 ## Project layout
 
@@ -16,7 +17,8 @@ lumen/
   catalog.py               realms and books from data/catalog.json
   entries.py               Entry model, repository (with cache), book page/leaf layout
   storage.py               BlobStore (vercel-blob SDK) and LocalStore (dev/tests)
-  routes.py                gate, aisle, book, write, media, healthz
+  routes.py                gate, aisle, book, search, write, media, healthz
+  search.py                catalog search: category, book name, title keyword
   cli.py                   `flask seed`
   templates/               Jinja templates styled with Tailwind utilities
 data/
@@ -77,6 +79,7 @@ Listings are cached for `CACHE_TTL` seconds (default 30) inside a warm function,
 
 - **Realms and books:** edit `data/catalog.json`. The aisle grows by one step for every two realms.
 - **Look and feel:** colours, fonts and animations are theme tokens in `assets/tailwind.css` (`--color-gold-400`, `--font-display`, …), used as utilities like `text-gold-400` or `font-display` in the templates.
+- **Search scope:** keywords match entry titles and book names (all words must appear). Search loads every entry once and caches the list for `CACHE_TTL` seconds; for a very large library, move the index to a database or a prebuilt JSON index in Blob.
 - **Long entries:** a page scrolls inside the book if an entry is longer than one page. Entries are capped at 6,000 characters.
 
 ## Notes

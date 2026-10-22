@@ -136,6 +136,22 @@ class EntryRepository:
 
         return self._cached(f"book:{realm}/{book}", load)
 
+    def all_entries(self) -> list[Entry]:
+        """Every entry in the library, newest first (used by catalog search)."""
+
+        def load() -> list[Entry]:
+            entries = []
+            for key in self.store.list(ENTRY_PREFIX):
+                if not key.endswith(".json"):
+                    continue
+                try:
+                    entries.append(Entry.from_dict(json.loads(self.store.get(key))))
+                except (NotFound, ValueError, KeyError):
+                    continue
+            return sorted(entries, key=lambda e: e.published_at, reverse=True)
+
+        return self._cached("all", load)
+
     def counts(self) -> dict[tuple[str, str], int]:
         """Number of entries per (realm, book), from one listing call."""
 

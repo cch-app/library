@@ -17,6 +17,7 @@ from flask import (
 )
 
 from .entries import Entry, EntryRepository, build_leaves, build_pages, sniff_image
+from .search import MAX_RESULTS, SearchQuery, search_catalog
 from .storage import NotFound, StorageError
 
 bp = Blueprint("main", __name__)
@@ -71,6 +72,43 @@ def aisle():
         open_realm=open_realm,
         highlight=highlight,
         arriving=request.args.get("from") == "gate",
+        at_desk=request.args.get("at") == "desk" and not open_realm,
+    )
+
+
+@bp.get("/search")
+def search():
+    """The library computer: search by category, book name and title keyword."""
+    cat = catalog()
+    category = request.args.get("category", "")
+    book = request.args.get("book", "")
+    query = SearchQuery(
+        category=category if cat.get_realm(category) else "",
+        book=book if book.count("/") == 1 and cat.get_book(*book.split("/"))[1] else "",
+        keyword=request.args.get("q", "")[:100],
+    )
+    results, error = [], None
+    if not query.is_empty:
+        try:
+            results = search_catalog(cat, repo().all_entries(), query)
+        except StorageError:
+            current_app.logger.exception("Search failed")
+            error = "THE CATALOG IS NOT RESPONDING. TRY AGAIN IN A MOMENT."
+    try:
+        entry_total = sum(repo().counts().values())
+    except StorageError:
+        entry_total = 0
+    return render_template(
+        "search.html",
+        catalog=cat,
+        query=query,
+        results=results,
+        error=error,
+        max_results=MAX_RESULTS,
+        book_total=sum(len(r.books) for r in cat.realms),
+        entry_total=entry_total,
+        # A submitted search reloads the page; the terminal is already on, so skip the start-up.
+        booted=bool(request.args),
     )
 
 
